@@ -42,14 +42,5 @@ jobs:
       - name: Build
         run: npm run build
 
-      # 关键：setup-node 写入的 .npmrc 含 "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}"，
-      # 这会让 npm 永远走 token 认证（空/无效 -> 404/ENEEDAUTH），不会走 OIDC。
-      # 发布前删除 .npmrc 并 unset 相关变量，npm 才会执行 OIDC trusted publishing。
-      # Root cause: setup-node writes an .npmrc with an _authToken line, so npm
-      # always uses token auth instead of OIDC. Remove .npmrc and unset env so
-      # npm performs the OIDC exchange (trusted publishing).
       - name: Publish to npmjs (Trusted Publishing + provenance)
-        run: |
-          rm -f "$NPM_CONFIG_USERCONFIG" "$HOME/.npmrc"
-          unset NODE_AUTH_TOKEN NPM_CONFIG_USERCONFIG
-          npm publish --provenance --access public
+        run: npm publish --provenance --access public
