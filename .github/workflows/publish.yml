@@ -19,9 +19,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # npm 12+ 才有 OIDC 发布认证（trusted publishing）；node 24 自带 npm 11，
+      # 需显式升级 npm 12（engines: node ^22.22.2 || ^24.15.0）。
+      # npm 12+ is required for OIDC publish auth (trusted publishing); node 24
+      # ships npm 11, so upgrade to npm 12 explicitly.
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
+
+      - name: Upgrade npm (OIDC support)
+        run: npm install -g npm@12
 
       - name: Install dependencies
         run: npm ci
