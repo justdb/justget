@@ -2,7 +2,9 @@
 
 <div align="center">
 
-**Multi-source racing chunked downloader with intelligent scheduling**
+**Multi-source racing chunked download accelerator**
+
+> A multi-source, mirror-based download accelerator for GitHub releases & CDN files — parallel, chunked, resumable, China-network friendly.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/node/v/justget.svg)](https://nodejs.org)

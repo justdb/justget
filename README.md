@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**高性能多源竞速分块下载工具** / **Multi-source racing chunked downloader with intelligent scheduling**
+**高性能多源竞速分块下载加速器** / **Multi-source racing chunked download accelerator**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/node/v/justget.svg)](https://nodejs.org)
