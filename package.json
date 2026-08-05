@@ -1,6 +1,6 @@
 {
   "name": "justget",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Multi-source racing chunked downloader / download accelerator for GitHub & mirror sources, China-network friendly. 多源竞速分块下载加速器（GitHub 镜像加速）",
   "type": "module",
   "main": "dist/index.js",
