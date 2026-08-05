@@ -1,0 +1,40 @@
+# 通过 npmjs Trusted Publishing (GitHub Actions OIDC) 发布 / Publish via npmjs Trusted Publishing
+# npmjs 侧需先配置 trusted publisher（见 README 或 docs.npmjs.com/trusted-publishers）
+# 触发 / Triggers: push tag v* 或手动 workflow_dispatch
+name: publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  id-token: write # OIDC —— Trusted Publishing 必需，不依赖 npm token
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish to npmjs (Trusted Publishing + provenance)
+        run: npm publish --provenance --access public
