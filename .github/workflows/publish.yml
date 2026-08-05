@@ -22,7 +22,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
         run: npm ci
@@ -36,5 +35,11 @@ jobs:
       - name: Build
         run: npm run build
 
+      # setup-node 会注入无效的 NODE_AUTH_TOKEN（len=23），npm 会用它认证导致
+      # 404 PUT；必须彻底 unset，npm 才会走 OIDC trusted publishing。
+      # setup-node injects a dummy NODE_AUTH_TOKEN; npm would use it for auth
+      # (404 PUT). Unset it so npm performs the OIDC exchange instead.
       - name: Publish to npmjs (Trusted Publishing + provenance)
-        run: npm publish --provenance --access public
+        run: |
+          unset NODE_AUTH_TOKEN
+          npm publish --provenance --access public
