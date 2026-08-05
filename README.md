@@ -9,6 +9,27 @@
 
 </div>
 
+**简体中文** · [English](./README.en.md)
+
+---
+
+## 🎯 为什么需要它 / Why this tool
+
+> 在国内网络环境下，直接访问 GitHub 等国外仓库经常很慢，甚至超时失败。
+> 本工具的思路很简单：**主站 + 多个镜像同时下载，谁快用谁**。
+> 官方源慢或挂了，会自动切到可用的镜像，不用傻等超时。
+
+```bash
+# 示例：GitHub 官方源 + 国内镜像一起抢
+justget https://github.com/xxx/releases/download/v1.0/file.zip \
+  -o file.zip \
+  -m https://gh-proxy.com/https://github.com/xxx/releases/download/v1.0/file.zip \
+  -m https://npmmirror.com/mirrors/xxx/file.zip
+```
+
+- 官方源快 → 直接用它，不折腾
+- 官方源慢/失败 → 自动切镜像，一般几秒内就有结果
+
 ---
 
 ## ✨ 特性 / Features
