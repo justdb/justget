@@ -1,0 +1,70 @@
+{
+  "name": "justget",
+  "version": "0.1.0",
+  "description": "Multi-source racing chunked downloader with intelligent scheduling / 多源竞速分块下载器",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/",
+    "LICENSE",
+    "README.md"
+  ],
+  "bin": {
+    "justget": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "download",
+    "downloader",
+    "multi-source",
+    "chunked",
+    "parallel",
+    "mirror",
+    "http",
+    "file"
+  ],
+  "author": "Wind Li",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/justdb/justget.git"
+  },
+  "bugs": {
+    "url": "https://github.com/justdb/justget/issues"
+  },
+  "homepage": "https://github.com/justdb/justget#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "commander": "^11.1.0",
+    "node-fetch": "^3.3.2",
+    "progress": "^2.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "@types/progress": "^2.0.7",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
+    "@vitest/coverage-v8": "^1.1.0",
+    "eslint": "^8.56.0",
+    "prettier": "^3.1.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0"
+  }
+}
