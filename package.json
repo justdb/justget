@@ -1,6 +1,6 @@
 {
   "name": "justget",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Multi-source racing chunked downloader with intelligent scheduling / 多源竞速分块下载器",
   "type": "module",
   "main": "dist/index.js",
