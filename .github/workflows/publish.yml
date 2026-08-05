@@ -36,11 +36,5 @@ jobs:
       - name: Build
         run: npm run build
 
-      # 必须清空 NODE_AUTH_TOKEN：存在时 npm 会走 token 认证而非 OIDC，
-      # 导致 trusted publishing 失败（404 PUT）。
-      # MUST clear NODE_AUTH_TOKEN: if present, npm uses token auth instead of
-      # OIDC and trusted publishing fails with 404 PUT.
       - name: Publish to npmjs (Trusted Publishing + provenance)
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ''
