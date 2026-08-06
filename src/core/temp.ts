@@ -126,6 +126,19 @@ export function commitMerged(mergedPath: string, output: string): void {
  * Remove all temp files related to the output (chunks + merged)
  */
 export function removeAllTempFiles(output: string): void {
+  removeTempFiles(output, { keepMerged: false });
+}
+
+/**
+ * 删除分块/单流临时文件，保留 merged（供断点续传）
+ * Remove chunk/single-stream temp files, keep the merged file (for resume)
+ */
+export function removeNonMergedTempFiles(output: string): void {
+  removeTempFiles(output, { keepMerged: true });
+}
+
+/** 内部实现：按是否保留 merged 删除临时文件 / shared impl */
+function removeTempFiles(output: string, opts: { keepMerged: boolean }): void {
   const dir = path.dirname(path.resolve(output));
   const hash = generateShortHash(output);
   let entries: fs.Dirent[];
@@ -136,6 +149,7 @@ export function removeAllTempFiles(output: string): void {
   }
   for (const entry of entries) {
     if (!entry.isFile() || !isTempFile(entry.name) || !entry.name.includes(hash)) continue;
+    if (opts.keepMerged && entry.name === getMergedTempFileName(output)) continue;
     try {
       fs.unlinkSync(path.join(dir, entry.name));
     } catch {

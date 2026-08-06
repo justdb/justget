@@ -13,6 +13,7 @@ import {
   mergeChunks,
   commitMerged,
   removeAllTempFiles,
+  removeNonMergedTempFiles,
 } from '../../src/core/temp.js';
 import { getTempFileName, getMergedTempFileName, generateShortHash } from '../../src/utils/hash.js';
 
@@ -137,5 +138,19 @@ describe('cleanupOldTempFiles', () => {
 
   it('does not throw when the directory does not exist', () => {
     expect(() => cleanupOldTempFiles(path.join(dir, 'missing', 'out.bin'))).not.toThrow();
+  });
+});
+
+describe('removeNonMergedTempFiles', () => {
+  it('removes chunk temp files but keeps the merged file', () => {
+    const chunk = buildChunkTempPaths(output, 2)[0].tempPath;
+    const merged = path.join(dir, getMergedTempFileName(output));
+    fs.writeFileSync(chunk, 'x');
+    fs.writeFileSync(merged, 'y');
+
+    removeNonMergedTempFiles(output);
+
+    expect(fs.existsSync(chunk)).toBe(false);
+    expect(fs.existsSync(merged)).toBe(true);
   });
 });

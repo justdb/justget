@@ -30,6 +30,7 @@ import {
   mergeChunks,
   commitMerged,
   removeAllTempFiles,
+  removeNonMergedTempFiles,
 } from './temp.js';
 import { validateFile } from '../utils/validator.js';
 import { getTempFileName, getMergedTempFileName } from '../utils/hash.js';
@@ -375,7 +376,9 @@ async function runDownload(
       w.controller.abort();
       w.monitor.stopSampling(); // 停止测速定时器，防止泄漏 / stop speed-sampling timers (leak fix)
     }
-    // 失败时保留临时文件以便续传 / keep temp files on failure for resume
+    // 失败时清理分块/单流临时文件，仅保留 merged（供断点续传）
+    // On failure: remove chunk/single-stream temp files, keep merged for resume
+    if (!ctx.done) removeNonMergedTempFiles(outPath);
   }
 }
 
