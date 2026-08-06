@@ -95,6 +95,9 @@ export const TEMP_FILE_CONFIG = {
 export function isImmediateFailure(error: Error, httpStatus?: number): boolean {
   // Check HTTP status codes
   if (httpStatus !== undefined) {
+    // 所有 5xx（服务器错误）一律立即失败并切换镜像 / all 5xx: immediate handover
+    if (httpStatus >= 500) return true;
+    // 常见 4xx 按列表（429 限流不立即切换，重试有意义）/ listed 4xx (429 excluded)
     if (REPLACEMENT_CONFIG.immediateFailureHttp.includes(httpStatus)) {
       return true;
     }

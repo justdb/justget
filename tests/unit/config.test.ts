@@ -88,6 +88,12 @@ describe('isImmediateFailure', () => {
     }
   });
 
+  it('treats all 5xx as immediate failures (server errors -> mirror handover)', () => {
+    for (const status of [500, 501, 502, 503, 504, 505, 511, 599]) {
+      expect(isImmediateFailure(new Error('any'), status)).toBe(true);
+    }
+  });
+
   it('does not treat 2xx/3xx or unlisted statuses as immediate failures', () => {
     expect(isImmediateFailure(new Error('any'), 200)).toBe(false);
     expect(isImmediateFailure(new Error('any'), 301)).toBe(false);
