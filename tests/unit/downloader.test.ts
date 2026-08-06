@@ -330,3 +330,93 @@ describe('download: input validation', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 });
+
+describe('download: failure cleanup (temp files)', () => {
+  it('single-stream all-fail leaves no partial temp files', async () => {
+    // fail:true → probe 拿不到 content-length → 单流模式；两个源都失败
+    const bad1 = await createTestServer({ content: SMALL, fail: true });
+    const bad2 = await createTestServer({ content: SMALL, fail: true });
+    servers.push(bad1, bad2);
+    const dir = makeTempDir();
+    const output = path.join(dir, 'out.bin');
+
+    await expect(
+      download({
+        url: `${bad1.baseUrl}/out.bin`,
+        output,
+        mirrors: [`${bad2.baseUrl}/out.bin`],
+        options: { primaryWarmupTime: 0, retries: 0 },
+      })
+    ).rejects.toThrow();
+    expect(fs.existsSync(output)).toBe(false);
+    // 单流 worker 失败自清理 + finally 兜底：无任何 .justget-* 残留
+    expect(listTempFiles(dir)).toEqual([]);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('chunked: a permanently failing chunk rejects the download', async () => {
+    // 前半段 range 全部 500 → 该 chunk 重试耗尽（retries=0）→ 无 active worker → 抛错
+    const s = await createTestServer({ content: SMALL, supportRange: true, failRanges: [[0, SMALL.length / 2]] });
+    servers.push(s);
+    const dir = makeTempDir();
+    const output = path.join(dir, 'out.bin');
+
+    await expect(
+      download({
+        url: `${s.baseUrl}/out.bin`,
+        output,
+        options: { primaryWarmupTime: 0, retries: 0 },
+      })
+    ).rejects.toThrow();
+    expect(fs.existsSync(output)).toBe(false);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('checksum mismatch keeps the merged temp file for resume', async () => {
+    const s = await createTestServer({ content: SMALL, supportRange: true });
+    servers.push(s);
+    const dir = makeTempDir();
+    const output = path.join(dir, 'out.bin');
+
+    await expect(
+      download({
+        url: `${s.baseUrl}/out.bin`,
+        output,
+        options: {
+          primaryWarmupTime: 0,
+          retries: 0,
+          checksum: '0'.repeat(64),
+        },
+      })
+    ).rejects.toThrow(/Checksum mismatch/);
+    expect(fs.existsSync(output)).toBe(false);
+    // 失败清理保留 merged（供断点续传），chunk 临时文件已清
+    const merged = listTempFiles(dir).filter((f) => f.includes('.merged.'));
+    expect(merged.length).toBe(1);
+    expect(listTempFiles(dir).length).toBe(1);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('single-stream with checksum: passes and commits atomically', async () => {
+    const s = await createTestServer({ content: SMALL, supportRange: false });
+    servers.push(s);
+    const dir = makeTempDir();
+    const output = path.join(dir, 'out.bin');
+
+    await download({
+      url: `${s.baseUrl}/out.bin`,
+      output,
+      options: {
+        primaryWarmupTime: 0,
+        retries: 0,
+        checksum: sha256(SMALL),
+        checksumAlgorithm: 'sha256',
+      },
+    });
+    expect(fs.existsSync(output)).toBe(true);
+    expect(fs.readFileSync(output).equals(SMALL)).toBe(true);
+    // 成功后无任何临时文件残留
+    expect(listTempFiles(dir)).toEqual([]);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+});

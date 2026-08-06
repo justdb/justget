@@ -17,6 +17,8 @@ export interface TestServerOptions {
   rejectHead?: boolean;
   /** 每 16KB 写入间隔 ms（模拟慢源）/ delay per 16KB write (simulate slow source) */
   throttleMs?: number;
+  /** 命中这些 [start,end] 区间的 Range 请求返回 500（模拟分块永久失败）/ ranges that return 500 */
+  failRanges?: Array<[number, number]>;
 }
 
 export interface TestServer {
@@ -79,6 +81,11 @@ export async function createTestServer(opts: TestServerOptions): Promise<TestSer
       const end = m[2] === '' ? content.length - 1 : Math.min(Number.parseInt(m[2], 10), content.length - 1);
       if (start >= content.length || start > end) {
         send(Buffer.alloc(0), 416, { 'Content-Range': `bytes */${content.length}` });
+        return;
+      }
+      // 命中 failRanges → 返回 500（分块永久失败场景）/ fail ranges return 500
+      if (opts.failRanges?.some(([rs, re]) => start <= re && end >= rs)) {
+        send(Buffer.from('Server Error'), 500, { 'Content-Type': 'text/plain' });
         return;
       }
       send(content.subarray(start, end + 1), 206, {

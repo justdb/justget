@@ -7,12 +7,16 @@
 
 import { program } from 'commander';
 import * as path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { download } from './index.js';
 
 program
   .name('justget')
   .description('Multi-source racing chunked downloader / 多源竞速分块下载器')
   .version('0.1.0');
+
+// 进度条只在 TTY 显示（pipe/CI/测试不刷屏）/ progress bar only on TTY
+const isTTY = process.stdout.isTTY === true;
 
 program
   .argument('<url>', 'URL to download / 下载地址')
@@ -58,6 +62,7 @@ program
           checksum: options.checksum,
           checksumAlgorithm: options.checksumAlgo,
           onProgress: (progress) => {
+            if (!isTTY) return; // 非 TTY（pipe/CI）：不输出进度
             const percentage = progress.percentage.toFixed(1);
             const speed = formatSpeed(progress.speed);
             const eta = formatTime(progress.eta);
@@ -66,17 +71,19 @@ program
         },
       });
 
-      process.stdout.write('\n✓ Download complete / 下载完成!\n');
-      // Node ≥19 默认 agent keep-alive 会挂住事件循环，主动退出
-      // Node >=19 default keep-alive agent keeps the event loop alive; exit explicitly
-      process.exit(0);
+      // 等 stdout flush 后再退出（pipe 模式下写入是异步的）/ flush stdout before exit
+      process.stdout.write('\n✓ Download complete / 下载完成!\n', () => process.exit(0));
     } catch (error) {
-      console.error('\n✗ Download failed / 下载失败:', error instanceof Error ? error.message : error);
-      process.exit(1);
+      const msg = `\n✗ Download failed / 下载失败: ${error instanceof Error ? error.message : error}\n`;
+      process.stderr.write(msg, () => process.exit(1));
     }
   });
 
-program.parse();
+// 直接运行（node dist/cli.js / bin）时才解析参数；测试（vitest 设 VITEST）与
+// import 时不触发。parse only when run directly (VITEST unset), not on import.
+if (process.env.VITEST !== 'true' && import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+  program.parse();
+}
 
 /**
  * 未指定 -o 时根据 URL 推断默认输出文件名
@@ -94,7 +101,7 @@ function defaultOutputName(url: string): string {
 /**
  * Format speed for display / 格式化速度显示
  */
-function formatSpeed(bytesPerSecond: number): string {
+export function formatSpeed(bytesPerSecond: number): string {
   const units = ['B', 'KB', 'MB', 'GB'];
   let value = bytesPerSecond;
   let unitIndex = 0;
@@ -110,7 +117,7 @@ function formatSpeed(bytesPerSecond: number): string {
 /**
  * Format time for display / 格式化时间显示
  */
-function formatTime(milliseconds: number): string {
+export function formatTime(milliseconds: number): string {
   const seconds = Math.ceil(milliseconds / 1000);
 
   if (seconds < 60) {
